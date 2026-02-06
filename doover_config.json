@@ -1,51 +1,215 @@
 {
     "ttn_platform_interface": {
         "name": "ttn_platform_interface",
-        "display_name": "ttn-platform-interface",
-        "type": "DEV",
+        "display_name": "TTN Platform Interface",
+        "type": "PRO",
         "visibility": "PUB",
         "allow_many": true,
         "description": "Allows other Doover apps to publish/receive configurable information to/from the TTN network via the Doover tag system",
         "long_description": "README.md",
         "depends_on": [],
-        "owner_org_key": "FIX-ME",
-        "image_name": "ghcr.io/getdoover/ttn-platform-interface:main",
-        "container_registry_profile_key": "FIX-ME",
-        "build_args": "--platform linux/amd64,linux/arm64",
+        "handler": "src.ttn_platform_interface.handler",
+        "lambda_config": {
+            "Runtime": "python3.13",
+            "Timeout": 300,
+            "MemorySize": 128,
+            "Handler": "src.ttn_platform_interface.handler"
+        },
+        "organisation_id": null,
+        "key": null,
+        "owner_org_id": null,
+        "code_repo_id": null,
+        "container_registry_profile_id": null,
+        "repo_branch": "main",
+        "image_name": null,
+        "icon_url": "https://raw.githubusercontent.com/getdoover/ttn-platform-interface/main/assets/icon.png",
+        "staging_config": {},
+        "export_config_command": null,
+        "run_command": null,
+        "lambda_arn": null,
         "config_schema": {
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             "$id": "",
             "title": "Application Config",
             "type": "object",
             "properties": {
-                "digital_outputs_enabled": {
-                    "title": "Digital Outputs Enabled",
-                    "x-name": "digital_outputs_enabled",
+                "dv_proc_subscriptions": {
+                    "title": "Subscription",
+                    "x-name": "dv_proc_subscriptions",
                     "x-hidden": false,
-                    "type": "boolean",
-                    "default": true
+                    "type": "array",
+                    "x-required": true,
+                    "description": "A list of channels to subscribe to.",
+                    "x-position": 0,
+                    "items": {
+                        "title": "Channel Subscription",
+                        "x-name": "dv_proc_subscription",
+                        "x-hidden": false,
+                        "type": "string",
+                        "x-required": true,
+                        "description": "The name of the channel to subscribe to"
+                    }
                 },
-                "a_funny_message": {
-                    "title": "A Funny Message",
-                    "x-name": "a_funny_message",
+                "dv_proc_schedules": {
+                    "title": "Schedule",
+                    "x-name": "dv_proc_schedules",
                     "x-hidden": false,
-                    "type": "string"
+                    "format": "doover-schedule",
+                    "type": "string",
+                    "x-required": true,
+                    "description": "Specify a schedule to run this task.",
+                    "x-position": 1
                 },
-                "simulator_app_key": {
-                    "format": "doover-application",
-                    "title": "Simulator App Key",
-                    "x-name": "simulator_app_key",
+                "ttn_cluster_url": {
+                    "title": "TTN Cluster URL",
+                    "x-name": "ttn_cluster_url",
+                    "x-hidden": false,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "TTN cluster base URL (e.g., https://eu1.cloud.thethings.network)",
+                    "default": "https://eu1.cloud.thethings.network",
+                    "x-position": 2
+                },
+                "ttn_application_id": {
+                    "title": "TTN Application ID",
+                    "x-name": "ttn_application_id",
                     "x-hidden": false,
                     "type": "string",
-                    "description": "The app key for the simulator"
+                    "x-required": true,
+                    "description": "The TTN application ID",
+                    "x-position": 3
+                },
+                "ttn_api_key": {
+                    "title": "TTN API Key",
+                    "x-name": "ttn_api_key",
+                    "x-hidden": false,
+                    "type": "string",
+                    "x-required": true,
+                    "description": "TTN API key (Bearer token with 'Write downlink application traffic' rights)",
+                    "x-position": 4
+                },
+                "ttn_webhook_id": {
+                    "title": "TTN Webhook ID",
+                    "x-name": "ttn_webhook_id",
+                    "x-hidden": false,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Webhook ID used for the downlink API path",
+                    "default": "doover",
+                    "x-position": 5
+                },
+                "uplink_tag_name": {
+                    "title": "Uplink Tag Name",
+                    "x-name": "uplink_tag_name",
+                    "x-hidden": false,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Tag name to write uplink data to on mapped devices",
+                    "default": "ttn_uplink",
+                    "x-position": 6
+                },
+                "downlink_request_tag": {
+                    "title": "Downlink Request Tag",
+                    "x-name": "downlink_request_tag",
+                    "x-hidden": false,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Tag name to read downlink requests from on mapped devices",
+                    "default": "ttn_downlink_request",
+                    "x-position": 7
+                },
+                "downlink_status_tag": {
+                    "title": "Downlink Status Tag",
+                    "x-name": "downlink_status_tag",
+                    "x-hidden": false,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Tag name to write downlink status to on mapped devices",
+                    "default": "ttn_downlink_status",
+                    "x-position": 8
+                },
+                "device_mapping": {
+                    "title": "Device Mapping",
+                    "x-name": "device_mapping",
+                    "x-hidden": false,
+                    "type": "array",
+                    "x-required": true,
+                    "x-position": 9,
+                    "items": {
+                        "title": "Device Map Entry",
+                        "x-name": "device_map_entry",
+                        "x-hidden": false,
+                        "type": "object",
+                        "x-required": true,
+                        "properties": {
+                            "ttn_device_id": {
+                                "title": "TTN Device ID",
+                                "x-name": "ttn_device_id",
+                                "x-hidden": false,
+                                "type": "string",
+                                "x-required": true,
+                                "description": "The device_id in TTN (e.g., eui-0004a30b001c0530)",
+                                "x-position": 1
+                            },
+                            "doover_app_key": {
+                                "title": "Doover App Key",
+                                "x-name": "doover_app_key",
+                                "x-hidden": false,
+                                "format": "doover-resource-application",
+                                "type": "string",
+                                "x-required": true,
+                                "description": "The Doover app key (agent) to map this TTN device to",
+                                "x-position": 2
+                            }
+                        },
+                        "additionalElements": true,
+                        "required": [
+                            "ttn_device_id",
+                            "doover_app_key"
+                        ],
+                        "x-collapsible": true,
+                        "x-defaultCollapsed": false
+                    }
+                },
+                "debug_enabled": {
+                    "title": "Debug Enabled",
+                    "x-name": "debug_enabled",
+                    "x-hidden": false,
+                    "type": [
+                        "boolean",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Enable verbose debug logging to tags",
+                    "default": false,
+                    "x-position": 10
                 }
             },
             "additionalElements": true,
             "required": [
-                "a_funny_message",
-                "simulator_app_key"
+                "dv_proc_subscriptions",
+                "dv_proc_schedules",
+                "ttn_application_id",
+                "ttn_api_key",
+                "device_mapping"
             ]
         },
-        "organisation_id": "FIX-ME"
+        "id": "145416697220729088",
+        "banner_url": null
     }
 }

@@ -1,10 +1,16 @@
-from pydoover.docker import run_app
+from typing import Any
 
-from .application import TtnPlatformInterfaceApplication
+from pydoover.cloud.processor import run_app
+
+from .application import TtnPlatformInterface
 from .app_config import TtnPlatformInterfaceConfig
 
-def main():
-    """
-    Run the application.
-    """
-    run_app(TtnPlatformInterfaceApplication(config=TtnPlatformInterfaceConfig()))
+
+def handler(event: dict[str, Any], context):
+    """Lambda handler entry point."""
+    TtnPlatformInterfaceConfig.clear_elements()
+    run_app(
+        TtnPlatformInterface(config=TtnPlatformInterfaceConfig()),
+        event,
+        context,
+    )
